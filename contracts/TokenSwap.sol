@@ -8,13 +8,13 @@ contract TokenSwap {
 
     /**
      * Network: Kovan
-     * Aggregator: ETH/USD
-     * 
-    //  ETH / BTC	8	0xAc559F25B1619171CbC396a50854A3240b6A4e99
+     * Pair Name: DAI / ETH	
+     18	
+     0x22B58f1EbEDfCA50feF632bD73368b2FdA96D5414e99
      */
     constructor() {
         priceFeed = AggregatorV3Interface(
-            0xAc559F25B1619171CbC396a50854A3240b6A4e99
+            0x22B58f1EbEDfCA50feF632bD73368b2FdA96D541
         );
     }
 
