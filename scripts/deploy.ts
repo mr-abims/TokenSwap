@@ -1,29 +1,20 @@
-// We require the Hardhat Runtime Environment explicitly here. This is optional
-// but useful for running the script in a standalone fashion through `node <script>`.
-//
-// When running the script with `npx hardhat run <script>` you'll find the Hardhat
-// Runtime Environment's members available in the global scope.
 import { ethers } from "hardhat";
 
 async function main() {
-  // Hardhat always runs the compile task when running scripts with its command
-  // line interface.
-  //
-  // If this script is run directly using `node` you may want to call compile
-  // manually to make sure everything is compiled
-  // await hre.run('compile');
-
-  // We get the contract to deploy
+  const address = "0x4746DeC9e833A82EC7C2C1356372CcF2cfcD2F3D";
+  const USDCowner = "0x25FCa2F41E4d086eEcCd4A9FBC6334cd8a70963C";
+  const DaiOwner = "0x4A35582a710E1F4b2030A3F826DA20BfB6703C09";
   const TokenSwap = await ethers.getContractFactory("TokenSwap");
-  const tokenswap = await TokenSwap.deploy("Hello, H");
+  const tokenswap = await TokenSwap.deploy(address);
 
   await tokenswap.deployed();
-
-  console.log("Greeter deployed to:", tokenswap.address);
+  console.log(await tokenswap.getLatestPrice(), "Price");
+  console.log(await tokenswap.getRate());
+  console.log(await tokenswap.swapDaiToUSDC(DaiOwner, USDCowner, 15678));
+  // console.log(tokenswap.retrieveOrder);
+  // console.log("Greeter deployed to:", tokenswap.address);
 }
 
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
 main().catch((error) => {
   console.error(error);
   process.exitCode = 1;

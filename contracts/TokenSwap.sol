@@ -6,9 +6,10 @@ import "./IERC20.sol";
 contract TokenSwap {
     AggregatorV3Interface internal priceFeed;
     uint8 decimals;
+    uint248 swapIndex;
     int256 currentRate;
-    address internal daiAddress = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
-    address internal usdcAddress = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+    address internal daiAddress = 0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063;
+    address internal usdcAddress = 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174;
     struct Swap {
         uint256 amountIn;
         address owner;
@@ -19,21 +20,13 @@ contract TokenSwap {
     IERC20 DAI = IERC20(daiAddress);
     IERC20 USDC = IERC20(usdcAddress);
 
-   
-    /**  
-    0xAed0c38402a5d19df6E4c03F4E2DceD6e29c1ee9 * Network: Mainet * Pair Name: DAI / USD * 
-     
-     
-     */
-    constructor() {
+    // 0x4746DeC9e833A82EC7C2C1356372CcF2cfcD2F3D* Network: polygon * Pair Name: DAI / USD *   
+    constructor(address _address) {
         priceFeed = AggregatorV3Interface(
-            0xAed0c38402a5d19df6E4c03F4E2DceD6e29c1ee9
+         _address
         );
     }
 
-    /**
-     * Returns the latest price
-     */
     function getLatestPrice() public {
         (
             uint80 roundID,
@@ -44,10 +37,28 @@ contract TokenSwap {
             ) =
             priceFeed.latestRoundData();
             currentRate = price;
+             decimals = priceFeed.decimals();
     }    
     function getRate() public view returns(int256, uint8) {
         return(currentRate, decimals);
-    }     
+    }   
+    function swapDaiToUSDC(address _fromAddress, address _toAddress, uint256 _amount) public {
+        uint256 swapAmount = (_amount * uint256(currentRate))/10**decimals;
+        require(DAI.balanceOf(_fromAddress) >= swapAmount, "Insufficient amount");
+        Swap storage swap_ = swapOrder[swapIndex];
+        swap_.amountIn = _amount;
+        swap_.currencyDecimal = decimals;
+        swap_.owner = _fromAddress;
+        ++swapIndex;
+        (bool status) = DAI.transferFrom(_fromAddress, msg.sender, _amount);
+        require(status,"Failed transaction");
+        (bool status1) = USDC.transfer(_toAddress, swapAmount);
+        require(status1, "Failed Transaction");
+    }
+    function retrieveOrder(uint256 index) public view returns(Swap memory) {
+        Swap storage swap_ = swapOrder[index];
+        return(swap_);
+    }
 
 
 }
