@@ -1,7 +1,7 @@
 import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
-import { ethers, network } from "hardhat";
+import { ethers } from "hardhat";
 import "./deploy.ts";
 import { Signer } from "ethers";
 
@@ -22,46 +22,61 @@ async function main() {
   const UsdcSigner: Signer = await ethers.getSigner(USDCowner);
   const DaiSigner = await ethers.getSigner(DaiOwner);
   // ///////////////////////
-  /* Interacting with USDC */
-
-  const getUSDC = await ethers.getContractAt("IERC20", USDCAddress, UsdcSigner);
-  /* Interacting with DAI */
-  const getDAI = await ethers.getContractAt("IERC20", DAIAddress, DaiSigner);
 
   // PriceFeed For USDC/DAi
   const contract = await ethers.getContractAt("TokenSwap", TokenSwapAddress);
 
   await contract.getLatestPrice(); // latest price of DAIvsUSDC
-  console.log(
-    `usdc balance before swapping: ${await getUSDC.balanceOf(USDCowner)}`
-  );
-  console.log(
-    `Dai balance before swapping: ${await getDAI.balanceOf(DaiOwner)}`
-  );
 
   /*  impersonating account */
 
+  async function prank(address: string) {
+    // @ts-ignore
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: [address],
+    });
+  }
+
+  prank(USDCowner);
   // @ts-ignore
-  await hre.network.provider.request({
-    method: "hardhat_impersonateAccount",
-    params: [DaiOwner],
-  });
-  //set Dai balance
-  await network.provider.send("hardhat_setBalance", [
-    DaiOwner,
-    "0x10000000000000000000000000000000000000000000000000",
+  await hre.network.provider.send("hardhat_setBalance", [
+    USDCowner,
+    "0x10000000000000000000000",
   ]);
-
-  await contract.connect(DaiSigner).swapDaiToUSDC(DaiOwner, "10000000000");
-
-  //   USDC ACCOUNT IMPERSONATION
-
-  console.log("Usdc sucessfully transfered to contract");
-  const UsdcBalance = await getUSDC.balanceOf(TokenSwapAddress);
+  prank(DaiOwner);
+  // @ts-ignore
+  await hre.network.provider.send("hardhat_setBalance", [
+    DaiOwner,
+    "0x10000000000000000000000",
+  ]);
+  /* Interacting with DAI */
+  const getDAI = await ethers.getContractAt("IERC20", DAIAddress);
+  await getDAI
+    .connect(DaiSigner)
+    .transfer(TokenSwapAddress, "10000000000000000000");
+  console.log("Dai Transferred to contract");
+  const DAIContractBal = await getDAI.balanceOf(TokenSwapAddress);
   console.log(
-    "USDC balance:",
-    Math.floor(Number(UsdcBalance) / Math.pow(10, 18))
+    "contract Balance of DAi token",
+    Math.floor(Number(DAIContractBal) / Math.pow(10, 18))
   );
+
+  // * Interacting with USDC */
+  const getUSDC = await ethers.getContractAt("IERC20", USDCAddress);
+  await getUSDC.connect(UsdcSigner).transfer(TokenSwapAddress, "100");
+  console.log("USDC Transferred to contract");
+  const USDContractBal = await getDAI.balanceOf(TokenSwapAddress);
+  console.log(
+    "contract Balance of DAi token",
+    Math.floor(Number(USDContractBal) / Math.pow(10, 18))
+  );
+  // Swaapping Dai to Usdc
+
+  const daiBal = await getDAI.balanceOf(DaiOwner);
+  const UsdcBal = await getUSDC.balanceOf(USDCowner);
+  console.log("old dai bal", Math.floor(Number(daiBal) / Math.pow(10, 18)));
+  console.log("old usdc bal", Math.floor(Number(UsdcBal) / Math.pow(10, 18)));
 }
 
 main().catch((error) => {

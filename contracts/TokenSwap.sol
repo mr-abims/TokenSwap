@@ -54,6 +54,28 @@ contract TokenSwap {
         (bool status1) = USDC.transfer(_fromAddress, swapAmount);
         require(status1, "Failed Transaction");
     }
+     // addLiquidity add Tokens to contract for permissionless swap
+    function addLiquidity(
+        address _address,
+        address _tokenAddress,
+        uint256 amount
+    ) public returns (bool success) {
+        success = IERC20(_tokenAddress).transferFrom(
+            _address,
+            address(this),
+            amount
+        );
+
+        require(success != true, "transfer not successful");
+    }
+    /// Check Balance of a particular token in the contract
+    function checkTokenBalance(address _tokenAddress)
+        external
+        view
+        returns (uint256 _Balance)
+    {
+        _Balance = IERC20(_tokenAddress).balanceOf(address(this));
+    }
     function retrieveOrder(uint256 index) public view returns(Swap memory) {
         Swap storage swap_ = swapOrder[index];
         return(swap_);
