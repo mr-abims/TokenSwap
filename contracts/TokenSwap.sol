@@ -41,17 +41,17 @@ contract TokenSwap {
     function getRate() public view returns(int256, uint8) {
         return(currentRate, decimals);
     }   
-    function swapDaiToUSDC(address _fromAddress, address _toAddress, uint256 _amount) public {
+    function swapDaiToUSDC(address _fromAddress, uint256 _amount) public {
         uint256 swapAmount = (_amount * uint256(currentRate))/10**decimals;
         require(DAI.balanceOf(_fromAddress) >= swapAmount, "Insufficient amount");
         Swap storage swap_ = swapOrder[swapIndex];
         swap_.amountIn = _amount;
         swap_.currencyDecimal = decimals;
         swap_.owner = _fromAddress;
-        ++swapIndex;
-        (bool status) = DAI.transferFrom(_fromAddress, msg.sender, _amount);
+        swapIndex++;
+        (bool status) = DAI.transferFrom(_fromAddress, address(this), _amount);
         require(status,"Failed transaction");
-        (bool status1) = USDC.transfer(_toAddress, swapAmount);
+        (bool status1) = USDC.transfer(_fromAddress, swapAmount);
         require(status1, "Failed Transaction");
     }
     function retrieveOrder(uint256 index) public view returns(Swap memory) {

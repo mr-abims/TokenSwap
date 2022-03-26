@@ -30,10 +30,12 @@ const config: HardhatUserConfig = {
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
-    ropsten: {
-      url: process.env.ROPSTEN_URL || "",
-      accounts:
-        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+    // @ts-ignore
+    hardhat: {
+      forking: {
+        // @ts-ignore
+        url: process.env.POLYGON_MAINET,
+      },
     },
   },
   gasReporter: {
